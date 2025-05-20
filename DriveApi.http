@@ -1,0 +1,6 @@
+@DriveApi_HostAddress = http://localhost:5275
+
+GET {{DriveApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
