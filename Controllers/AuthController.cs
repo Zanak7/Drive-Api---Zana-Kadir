@@ -63,6 +63,39 @@ namespace DriveApi.Controllers
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMe()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return NotFound();
+            return Ok(new {
+                userName = user.UserName,
+                email = user.Email
+            });
+        }
+
+        [Authorize]
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateMe([FromBody] RegisterRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return NotFound();
+            user.UserName = request.UserName;
+            user.Email = request.Email;
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+            return Ok(new {
+                userName = user.UserName,
+                email = user.Email
+            });
+        }
     }
 
     public class RegisterRequest

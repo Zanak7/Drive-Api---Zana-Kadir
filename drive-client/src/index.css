@@ -1,0 +1,67 @@
+/* Modern light/dark palette with orange accents */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-light: #ffffff;
+  --color-bg-light-2: #f5f6fa;
+  --color-bg-dark: #181818;
+  --color-bg-dark-2: #23272f;
+  --color-text-light: #181818;
+  --color-text-dark: #f9fafb;
+  --color-btn-orange-1: #ff9800;
+  --color-btn-orange-2: #ffd54f;
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--color-bg-light);
+  color: var(--color-text-light);
+}
+html.dark, body.dark {
+  background: var(--color-bg-dark);
+  color: var(--color-text-dark);
+}
+
+/* Card backgrounds */
+.dashboard-container, .rounded-2xl, .rounded-xl, .shadow-soft {
+  background: var(--color-bg-light-2);
+}
+html.dark .dashboard-container, html.dark .rounded-2xl, html.dark .rounded-xl, html.dark .shadow-soft {
+  background: var(--color-bg-dark-2);
+}
+
+/* Button gradients */
+.btn-primary {
+  @apply text-white font-semibold shadow;
+  background-image: linear-gradient(90deg, var(--color-btn-orange-1) 0%, var(--color-btn-orange-2) 100%);
+}
+.dark .btn-primary {
+  @apply text-black font-semibold shadow;
+  background-image: linear-gradient(90deg, var(--color-btn-orange-1) 0%, #ffb300 100%);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+input, textarea, select {
+  background: var(--color-bg-light);
+  color: var(--color-text-light);
+  border: 1px solid #e5e7eb;
+}
+html.dark input, html.dark textarea, html.dark select {
+  background: var(--color-bg-dark-2);
+  color: var(--color-text-dark);
+  border: 1px solid #23272f;
+}
+
+/* High contrast for all text and icons */
+.text-contrast {
+  color: var(--color-text-light);
+}
+html.dark .text-contrast {
+  color: var(--color-text-dark);
+}

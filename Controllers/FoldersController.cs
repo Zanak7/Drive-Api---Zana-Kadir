@@ -21,7 +21,18 @@ namespace DriveApi.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
             var folders = await _folderService.GetAllByUserIdAsync(userId);
-            return Ok(folders);
+            var folderDtos = folders.Select(f => new FolderResponseDto
+            {
+                Id = f.Id,
+                Name = f.Name,
+                Files = f.Files?.Select(file => new FileResponseDto
+                {
+                    Id = file.Id,
+                    Name = file.Name,
+                    FolderId = file.FolderId
+                }).ToList()
+            }).ToList();
+            return Ok(folderDtos);
         }
 
         [HttpGet("{id}")]
@@ -30,15 +41,31 @@ namespace DriveApi.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
             var folder = await _folderService.GetByIdAsync(id);
             if (folder == null || folder.UserId != userId) return NotFound();
-            return Ok(folder);
+            var dto = new FolderResponseDto
+            {
+                Id = folder.Id,
+                Name = folder.Name,
+                Files = folder.Files?.Select(file => new FileResponseDto
+                {
+                    Id = file.Id,
+                    Name = file.Name,
+                    FolderId = file.FolderId
+                }).ToList()
+            };
+            return Ok(dto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Folder folder)
+        public async Task<IActionResult> Create([FromBody] Folder folder)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            // Defensive: always set UserId from JWT, ignore any client value
             folder.UserId = userId;
+            // Defensive: clear Id to avoid accidental overwrite
+            folder.Id = 0;
             await _folderService.AddAsync(folder);
+            // Optionally log for debug
+            System.Console.WriteLine($"Created folder '{folder.Name}' for user {userId}");
             return CreatedAtAction(nameof(GetById), new { id = folder.Id }, folder);
         }
 

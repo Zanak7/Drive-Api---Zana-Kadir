@@ -2,6 +2,18 @@
 
 An ASP.NET Core Web API for managing users, folders, and files with secure JWT authentication and PostgreSQL.
 
+## Table of Contents
+- [Features](#features)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Configuration](#configuration)
+- [API Usage](#api-usage)
+  - [Authentication Endpoints](#1-register-a-new-user)
+  - [Folder Endpoints](#3-folder-endpoints-all-require-jwt)
+  - [File Endpoints](#4-file-endpoints-all-require-jwt)
+- [Notes](#notes)
+- [License](#license)
+
 ## Features
 - User registration and login (JWT authentication)
 - Create, update, delete, and list folders (with subfolder support)
@@ -26,14 +38,20 @@ An ASP.NET Core Web API for managing users, folders, and files with secure JWT a
      "Issuer": "DriveApiIssuer"
    }
    ```
+   > **Note**: For production, store the JWT key in a secure environment variable and never hardcode it.
+
 2. Run migrations:
    ```powershell
    dotnet ef database update --project DriveApi.csproj
    ```
+
 3. Start the API:
    ```powershell
    dotnet run --project DriveApi.csproj
    ```
+
+4. Access Swagger UI:
+   - Open your browser and navigate to `http://localhost:<port>/swagger` to explore and test the API.
 
 ## API Usage
 
@@ -47,6 +65,12 @@ Content-Type: application/json
   "password": "YourPassword123!"
 }
 ```
+**Example Response**:
+```json
+{
+  "message": "User registered successfully."
+}
+```
 
 ### 2. Login and Get JWT Token
 ```
@@ -55,6 +79,12 @@ Content-Type: application/json
 {
   "userName": "testuser",
   "password": "YourPassword123!"
+}
+```
+**Example Response**:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 - Use the returned `token` as a Bearer token for all secured endpoints.
@@ -67,6 +97,14 @@ Content-Type: application/json
   Authorization: Bearer <token>
   {
     "name": "MyFolder"
+  }
+  ```
+  **Example Response**:
+  ```json
+  {
+    "id": 1,
+    "name": "MyFolder",
+    "createdAt": "2025-05-22T12:00:00Z"
   }
   ```
 - **Create Subfolder:**
@@ -113,8 +151,17 @@ Content-Type: application/json
   Authorization: Bearer <token>
   {
     "name": "file.txt",
-    "content": [1,2,3,4], // byte array
+    "content": "SGVsbG8gd29ybGQ=", // base64-encoded content
     "folderId": 1
+  }
+  ```
+  **Example Response**:
+  ```json
+  {
+    "id": 1,
+    "name": "file.txt",
+    "folderId": 1,
+    "uploadedAt": "2025-05-22T12:00:00Z"
   }
   ```
 - **List My Files:**
@@ -140,7 +187,7 @@ Content-Type: application/json
   {
     "id": 1,
     "name": "newname.txt",
-    "content": [1,2,3],
+    "content": "U29tZSBuZXcgY29udGVudA==", // base64-encoded content
     "folderId": 1
   }
   ```
@@ -155,10 +202,13 @@ Content-Type: application/json
 - Folders and files are always scoped to the authenticated user.
 - Deleting a folder will also delete all its subfolders and files (cascade delete).
 
+## License
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
 ---
 
 For more details, see the source code or use Swagger UI at `/swagger` when running the API in development mode.
 
 ---
 
-Generated on 2025-05-20.
+Generated on 2025-05-22.

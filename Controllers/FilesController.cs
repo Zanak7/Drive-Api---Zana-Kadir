@@ -1,6 +1,7 @@
 using DriveApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Security.Claims;
 
 namespace DriveApi.Controllers
@@ -21,7 +22,14 @@ namespace DriveApi.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
             var files = await _fileService.GetAllByUserIdAsync(userId);
-            return Ok(files);
+            // Use the full namespace for FileResponseDto to avoid ambiguity
+            var fileDtos = files.Select(f => new DriveApi.Controllers.FileResponseDto
+            {
+                Id = f.Id,
+                Name = f.Name,
+                FolderId = f.FolderId
+            }).ToList();
+            return Ok(fileDtos);
         }
 
         [HttpGet("{id}")]
@@ -30,7 +38,29 @@ namespace DriveApi.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
             var file = await _fileService.GetByIdAsync(id);
             if (file == null || file.UserId != userId) return NotFound();
-            return Ok(file);
+
+            // Try to preview as text if possible (first 200 bytes)
+            string? preview = null;
+            try
+            {
+                var bytes = file.Content.Take(200).ToArray();
+                preview = System.Text.Encoding.UTF8.GetString(bytes);
+                // If binary, fallback
+                if (preview.Any(c => char.IsControl(c) && c != '\r' && c != '\n' && c != '\t'))
+                    preview = "[Preview not available]";
+            }
+            catch
+            {
+                preview = "[Preview not available]";
+            }
+
+            var dto = new {
+                Id = file.Id,
+                Name = file.Name,
+                FolderId = file.FolderId,
+                Preview = preview
+            };
+            return Ok(dto);
         }
 
         [HttpPost("upload")]
@@ -40,12 +70,19 @@ namespace DriveApi.Controllers
             var file = new File
             {
                 Name = request.Name,
-                Content = request.Content,
+                Content = Convert.FromBase64String(request.Content), // Decode base64 to byte[]
                 FolderId = request.FolderId,
                 UserId = userId
             };
             await _fileService.AddAsync(file);
-            return CreatedAtAction(nameof(GetById), new { id = file.Id }, file);
+            // Use the full namespace for FileResponseDto to avoid ambiguity
+            var dto = new DriveApi.Controllers.FileResponseDto
+            {
+                Id = file.Id,
+                Name = file.Name,
+                FolderId = file.FolderId
+            };
+            return CreatedAtAction(nameof(GetById), new { id = file.Id }, dto);
         }
 
         [HttpPut("{id}")]
@@ -83,7 +120,7 @@ namespace DriveApi.Controllers
     public class UploadFileRequest
     {
         public string Name { get; set; } = string.Empty;
-        public byte[] Content { get; set; } = Array.Empty<byte>();
+        public string Content { get; set; } = string.Empty; // Accept base64 string
         public int FolderId { get; set; }
     }
 }
