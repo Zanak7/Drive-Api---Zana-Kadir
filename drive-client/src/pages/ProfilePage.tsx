@@ -3,6 +3,7 @@ import api from '../api';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useNavigate } from 'react-router-dom';
+import { getErrorMessage } from '../utils/errorUtils';
 
 const ProfilePage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -27,6 +28,14 @@ const ProfilePage: React.FC = () => {
     fetchProfile();
   }, []);
 
+  // Clear error after 5 seconds
+  React.useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -35,7 +44,7 @@ const ProfilePage: React.FC = () => {
       await api.put('/auth/me', { userName: username, email });
       setSuccess('Profile updated successfully!');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Update failed');
+      setError(getErrorMessage(err, 'Update failed'));
     }
   };
 

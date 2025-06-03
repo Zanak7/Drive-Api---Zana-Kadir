@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import clsx from "clsx";
+import { getErrorMessage } from '../utils/errorUtils';
 
 interface FileUploadModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDrop = (e: React.DragEvent) => {
@@ -33,10 +35,19 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
     }
   };
 
+  // Clear error after 5 seconds
+  React.useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleUpload = async () => {
     if (!selectedFile) return;
     setIsUploading(true);
     setProgress(0);
+    setError('');
 
     const reader = new FileReader();
     reader.onload = async () => {
@@ -74,8 +85,9 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
           onUploadSuccess();
           onClose();
         }, 700);
-      } catch {
-        toast.error("Upload failed");
+      } catch (err: any) {
+        setError(getErrorMessage(err, 'Upload failed'));
+        toast.error(getErrorMessage(err, 'Upload failed'));
         setIsUploading(false);
       }
     };
@@ -178,6 +190,9 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
               style={{ width: `${progress}%` }}
             />
           </div>
+        )}
+        {error && (
+          <div className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-xl px-4 py-2 text-center mt-2" aria-live="polite">{error}</div>
         )}
         <button
           className={clsx(

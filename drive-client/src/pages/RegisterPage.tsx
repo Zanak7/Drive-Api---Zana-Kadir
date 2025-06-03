@@ -3,6 +3,7 @@ import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { getErrorMessage } from '../utils/errorUtils';
 
 const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,14 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Clear error after 5 seconds
+  React.useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -18,12 +27,7 @@ const RegisterPage: React.FC = () => {
       await api.post('/auth/register', { userName: username, email, password });
       navigate('/login');
     } catch (err: any) {
-      const errors = err.response?.data;
-      if (Array.isArray(errors) && errors.length > 0 && errors[0].description) {
-        setError(errors[0].description);
-      } else {
-        setError(err.response?.data?.message || 'Registration failed');
-      }
+      setError(getErrorMessage(err, 'Registration failed'));
     }
   };
 

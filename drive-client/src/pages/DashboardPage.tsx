@@ -26,6 +26,21 @@ const DashboardPage: React.FC = () => {
   const [uploadFolderId, setUploadFolderId] = useState<number | null>(null);
   const navigate = useNavigate();
 
+  // Utility to extract error message
+  const getErrorMessage = (err: any, fallback = 'An error occurred') => {
+    if (err?.response?.data?.message) return err.response.data.message;
+    if (err?.message) return err.message;
+    return fallback;
+  };
+
+  // Clear error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   useEffect(() => {
     api.get('/folders/me')
       .then(res => {
@@ -36,7 +51,7 @@ const DashboardPage: React.FC = () => {
           localStorage.removeItem('token');
           navigate('/login');
         } else {
-          setError('Failed to load folders');
+          setError(getErrorMessage(err, 'Failed to load folders'));
         }
       });
   }, [navigate]);
@@ -49,7 +64,7 @@ const DashboardPage: React.FC = () => {
       setFolders([...folders, res.data]);
       setName('');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create folder');
+      setError(getErrorMessage(err, 'Failed to create folder'));
     }
   };
 
@@ -100,16 +115,16 @@ const DashboardPage: React.FC = () => {
                     try {
                       await api.put(`/folders/${folder.id}`, { ...folder, name: newName });
                       setFolders(folders.map(f => f.id === folder.id ? { ...f, name: newName } : f));
-                    } catch {
-                      setError('Failed to rename folder');
+                    } catch (err: any) {
+                      setError(getErrorMessage(err, 'Failed to rename folder'));
                     }
                   }} className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs">Rename</button>
                   <button onClick={async () => {
                     try {
                       await api.delete(`/folders/${folder.id}`);
                       setFolders(folders.filter(f => f.id !== folder.id));
-                    } catch {
-                      setError('Failed to delete folder');
+                    } catch (err: any) {
+                      setError(getErrorMessage(err, 'Failed to delete folder'));
                     }
                   }} className="px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600 text-xs">Delete</button>
                 </div>
@@ -139,7 +154,6 @@ const DashboardPage: React.FC = () => {
                           <div className="flex gap-2">
                             <button
                               onClick={async () => {
-                                // Download file
                                 try {
                                   const res = await api.get(`/files/download/${file.id}`, {
                                     responseType: 'blob',
@@ -155,8 +169,8 @@ const DashboardPage: React.FC = () => {
                                   link.click();
                                   link.remove();
                                   window.URL.revokeObjectURL(url);
-                                } catch {
-                                  setError('Failed to download file');
+                                } catch (err: any) {
+                                  setError(getErrorMessage(err, 'Failed to download file'));
                                 }
                               }}
                               className="p-1 rounded bg-blue-600 hover:bg-blue-700 text-white shadow transition"
@@ -173,8 +187,8 @@ const DashboardPage: React.FC = () => {
                                   ...f,
                                   files: f.files?.map(fl => fl.id === file.id ? { ...fl, name: newName } : fl)
                                 } : f));
-                              } catch {
-                                setError('Failed to rename file');
+                              } catch (err: any) {
+                                setError(getErrorMessage(err, 'Failed to rename file'));
                               }
                             }} className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs">Rename</button>
                             <button onClick={async () => {
@@ -184,8 +198,8 @@ const DashboardPage: React.FC = () => {
                                   ...f,
                                   files: f.files?.filter(fl => fl.id !== file.id)
                                 } : f));
-                              } catch {
-                                setError('Failed to delete file');
+                              } catch (err: any) {
+                                setError(getErrorMessage(err, 'Failed to delete file'));
                               }
                             }} className="px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600 text-xs">Delete</button>
                           </div>
@@ -226,8 +240,8 @@ const DashboardPage: React.FC = () => {
                           link.click();
                           link.remove();
                           window.URL.revokeObjectURL(url);
-                        } catch {
-                          setError('Failed to download file');
+                        } catch (err: any) {
+                          setError(getErrorMessage(err, 'Failed to download file'));
                         }
                       }}
                       className="p-1 rounded bg-blue-600 hover:bg-blue-700 text-white shadow transition"
@@ -267,8 +281,8 @@ const DashboardPage: React.FC = () => {
                           link.click();
                           link.remove();
                           window.URL.revokeObjectURL(url);
-                        } catch {
-                          setError('Failed to download file');
+                        } catch (err: any) {
+                          setError(getErrorMessage(err, 'Failed to download file'));
                         }
                       }}
                       className="p-1 rounded bg-blue-600 hover:bg-blue-700 text-white shadow transition"
@@ -293,8 +307,8 @@ const DashboardPage: React.FC = () => {
           try {
             const res = await api.get('/files/me');
             setFolders(Array.isArray(res.data) ? res.data : []);
-          } catch {
-            setError('Failed to load files');
+          } catch (err: any) {
+            setError(getErrorMessage(err, 'Failed to load files'));
           }
         }}
       />

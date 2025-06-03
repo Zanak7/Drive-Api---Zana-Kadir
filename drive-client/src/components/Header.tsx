@@ -32,7 +32,7 @@ const Header: React.FC = () => {
       <div className="max-w-5xl mx-auto flex items-center justify-between py-3 px-4 md:px-8">
         {/* Logo/Brand */}
         <Link to="/" className="flex items-center gap-2 font-bold text-xl text-gray-900 dark:text-white">
-          <span>DriveApp</span>
+          <span>Drive App</span>
         </Link>
         <div className="flex items-center gap-4">
           {/* Theme toggle */}

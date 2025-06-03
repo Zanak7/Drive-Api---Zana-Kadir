@@ -3,12 +3,21 @@ import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { getErrorMessage } from '../utils/errorUtils';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Clear error after 5 seconds
+  React.useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +27,7 @@ const LoginPage: React.FC = () => {
       localStorage.setItem('token', res.data.token);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(getErrorMessage(err, 'Login failed'));
     }
   };
 
@@ -65,7 +74,7 @@ const LoginPage: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-blue font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               Sign In
             </button>
